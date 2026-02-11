@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     int iterations = atoi(argv[1]); //Store the iterations from command line as an integer
     
     //Loop to print the PID, PPID, and iteration based on the number of iterations given by the user

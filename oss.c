@@ -17,7 +17,7 @@ void print_help() {
     printf("  -t iter Number of iterations to pass to the user process\n");
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     const char optstr[] = "hn:s:t:";
     char opt;
     pid_t pid;
@@ -49,23 +49,47 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    printf("OSS: Launching %d children, %d simultaneous, with %d iterations\n",
+           totalChildren, maxSimultaneous, iterations);
+
     while(currentProcesses < maxSimultaneous) {
         pid = fork(); //copy process from the parent
         if (pid < 0) {
             perror("Fork failed");
             return 1;
-        } else if (pid == 0) {
-            
-        } else {
+        } else if (pid == 0) { //child process
+            char strArg[20]; 
+            sprintf(strArg, "%d", iterations); //convert iterations to string
+            char* args[] = {"./user", strArgl, NULL}; //arguments to pass to the user process
+            execvp(args[0], args); 
+            fprintf(stderr, "execl failed\n");
+            return 1;
+        } else { //parent process
             currentProcesses++;
             totalProcesses++;
+            printf("OSS: Created child with PID %d\n", pid);
         }
     }
 
     while (totalProcesses < totalChildren) {
-        wait();
+        wait(0);
+        pid = fork();
+        if (pid < 0) {
+            perror("Fork failed");
+            return 1;
+        } else if (pid == 0) { 
+            char strArg[20];
+            sprintf(strArg, "%d", iterations);
+            char* args[] = {"./user", strArg, NULL}; 
+            execvp(args[0], args); 
+            fprintf(stderr, "execl failed\n");
+            return 1;
+        } else {
+            totalProcesses++;
+        }   
     }
 
-    wait();
+    wait(0);
+    printf("OSS: Summary - Total processes finished %d\n", totalProcesses);
     return 0;
 }
