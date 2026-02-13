@@ -52,27 +52,32 @@ int main(int argc, char* argv[]) {
     printf("OSS: Launching %d children, %d simultaneous, with %d iterations\n",
            totalChildren, maxSimultaneous, iterations);
 
-    while(currentProcesses < maxSimultaneous) {
+    while(currentProcesses < maxSimultaneous && totalProcesses < totalChildren) {
         pid = fork(); //copy process from the parent
         if (pid < 0) {
             perror("Fork failed");
             return 1;
         } else if (pid == 0) { //child process
             char strArg[20]; 
-            sprintf(strArg, "%d", iterations); //convert iterations to string
-            char* args[] = {"./user", strArgl, NULL}; //arguments to pass to the user process
+            sprintf(strArg, "%d", iterations); //Convert iterations to string and pass it as an argument to the user process
+            char* args[] = {"./user", strArg, NULL}; //Arguments to pass to the user process
             execvp(args[0], args); 
             fprintf(stderr, "execl failed\n");
             return 1;
-        } else { //parent process
-            currentProcesses++;
-            totalProcesses++;
-            printf("OSS: Created child with PID %d\n", pid);
-        }
+        } 
+
+        currentProcesses++;
+        totalProcesses++;
+        printf("OSS: Created child with PID %d\n", pid);
+        
     }
 
     while (totalProcesses < totalChildren) {
-        wait(0);
+        //Wait for a child process to finish before creating a new one
+        if (wait(0) > 0) { //if a child process finishes, decrease the count of current processes
+            currentProcesses--;
+        }
+
         pid = fork();
         if (pid < 0) {
             perror("Fork failed");
@@ -84,12 +89,19 @@ int main(int argc, char* argv[]) {
             execvp(args[0], args); 
             fprintf(stderr, "execl failed\n");
             return 1;
-        } else {
-            totalProcesses++;
-        }   
+        }
+        
+        currentProcesses++;
+        totalProcesses++;
     }
 
-    wait(0);
+    //Wait for all child processes to finish before exiting
+    while (currentProcesses > 0) { 
+        if (wait(0) > 0) {
+            currentProcesses--;
+        }
+    }
+    
     printf("OSS: Summary - Total processes finished %d\n", totalProcesses);
     return 0;
 }

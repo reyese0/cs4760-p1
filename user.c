@@ -6,7 +6,12 @@
 #include <unistd.h>
 
 int main(int argc, char* argv[]) {
-    int iterations = atoi(argv[1]); //Store the iterations from command line as an integer
+    int iterations = atoi(argv[1]); //Convert the first command line argument to an integer for iterations
+
+    if (argc < 2) {
+        fprintf(stderr, "Invalid parameters\n");
+        return 1;
+    }
     
     //Loop to print the PID, PPID, and iteration based on the number of iterations given by the user
     for (int i = 1; i <= iterations; i++) {
